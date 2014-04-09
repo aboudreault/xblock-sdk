@@ -79,7 +79,16 @@ class XBlockState(models.Model):
         scope_id = key.block_scope_id
 
         # Ask our ID Manager for how this scope_id maps to scenario and XML tag
-        scenario, tag, _ = scope_id.split(".", 2)
+        try:
+            scenario, tag, _ = scope_id.split(".", 2)
+        except ValueError:
+            # This happens when using an attribute with Scope.preferences:
+            # next_step = String(help="url_name of the next step the student must complete (global to all blocks)",
+            #                    default='mentoring_first', scope=Scope.preferences)
+            # The scope id was "mentoring"
+            # HACK, find the proper patch for this
+            scenario, tag, _ =  'global', scope_id, 'd0'
+
         record, _ = cls.objects.get_or_create(
             scope=block_scope_name,
             scope_id=key.block_scope_id,
